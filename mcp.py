@@ -1,8 +1,14 @@
 # mcp.py
 
+# llm2json으로부터 파싱된 json을 받고 분기하는, DB와의 프로토콜을 정의하는 모듈입니다. (CRUD + conflict)
+
+# 아직 DB를 만든게 아니라서, 그냥 함수 작동하는지 보려고 stub으로 만들었습니다.
+# 아직 초기구현이라 많이 수정해야합니다!!!!
+
 """
 MCP 서버 Stub (CRUD + 충돌 체크)
-실제 DB 서버와 연결 시 이 부분을 교체하면 됨.
+해야할일 1: SQLite 연동
+해야할일 2: DB Server 연동(추후)
 """
 
 def call_mcp_create_event(event: dict):
@@ -34,6 +40,7 @@ def call_mcp_check_conflict(event: dict):
     """
     같은 시간대에 이미 일정이 있는지 확인
     """
+    
     print(f"[MCP-Stub] 일정 충돌 확인 요청: {event}")
     if event.get("date") == "2025-09-26" and event.get("time") == "19:00":
         return {

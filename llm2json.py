@@ -4,13 +4,11 @@ import os
 import json
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) # API 연동하기
 
+
+#유저 입력을 LLM에 보내 JSON 파싱
 def classify_user_input(user_input: str) -> dict:
-    """
-    유저 입력을 LLM에 보내 JSON 변환
-    (멀티 액션, needs_clarification 지원)
-    """
 
     prompt_text = f"""
     당신은 일정 관리 비서입니다.
