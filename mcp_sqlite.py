@@ -33,16 +33,18 @@ conn.commit()
 
 def call_mcp_create_event(event: dict):
     cursor.execute(
-        "INSERT INTO events (title, date, time, participants) VALUES (?, ?, ?, ?)",
+        "INSERT INTO events (title, date, time, participants, location) VALUES (?, ?, ?, ?, ?)",
         (
             event.get("title"),
             event.get("date"),
             event.get("time"),
-            ",".join(event.get("participants", [])) if event.get("participants") else ""
+            ",".join(event.get("participants", [])) if event.get("participants") else "",
+            event.get("location")
         )
     )
     conn.commit()
     return {"status": "success"}
+
 
 
 def call_mcp_read_events(query: dict):
@@ -50,7 +52,7 @@ def call_mcp_read_events(query: dict):
     if not date:
         return {"events": []}
 
-    cursor.execute("SELECT title, date, time, participants FROM events WHERE date=?", (date,))
+    cursor.execute("SELECT title, date, time, participants, location FROM events WHERE date=?", (date,))
     rows = cursor.fetchall()
     return {
         "events": [
@@ -58,12 +60,12 @@ def call_mcp_read_events(query: dict):
                 "title": r[0],
                 "date": r[1],
                 "time": r[2],
-                "participants": r[3].split(",") if r[3] else []
+                "participants": r[3].split(",") if r[3] else [],
+                "location": r[4]
             }
             for r in rows
         ]
     }
-
 
 def call_mcp_update_event(event: dict):
     # title + date + time을 기준으로 업데이트 예시

@@ -7,7 +7,7 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) # API 연동하기
 
 
-#유저 입력을 LLM에 보내 JSON 파싱
+# 유저 입력을 LLM에 보내 JSON 파싱
 def classify_user_input(user_input: str) -> dict:
 
     prompt_text = f"""
@@ -16,7 +16,7 @@ def classify_user_input(user_input: str) -> dict:
 
     규칙:
     - 여러 명령어가 있으면 actions 배열로 나눠서 넣으세요.
-    - 필수 정보(title, date, time)가 빠졌거나 모호하면,
+    - 필수 정보(title, date, time, location)가 빠졌거나 모호하면,
       해당 action에 "needs_clarification": true 와 "missing_fields": [...] 추가.
 
     JSON 스펙:
@@ -28,7 +28,8 @@ def classify_user_input(user_input: str) -> dict:
             "title": string (optional),
             "date": string (YYYY-MM-DD, optional),
             "time": string (HH:MM, optional),
-            "participants": [string] (optional)
+            "participants": [string] (optional),
+            "location": string (optional)
           }},
           "needs_clarification": bool (optional),
           "missing_fields": [string] (optional)
@@ -36,9 +37,8 @@ def classify_user_input(user_input: str) -> dict:
       ]
     }}
 
-    
     예시1)
-    입력: "내일 저녁 7시에 민수랑 운동 일정 추가해줘"
+    입력: "내일 저녁 7시에 민수랑 잠실 헬스장에서 운동 일정 추가해줘"
     출력: {{
       "actions": [
         {{
@@ -47,7 +47,8 @@ def classify_user_input(user_input: str) -> dict:
             "title": "운동",
             "date": "2025-09-26",
             "time": "19:00",
-            "participants": ["민수"]
+            "participants": ["민수"],
+            "location": "잠실 헬스장"
           }}
         }}
       ]
@@ -61,13 +62,13 @@ def classify_user_input(user_input: str) -> dict:
           "action": "create",
           "event": {{"date": "2025-09-26", "time": "17:00"}},
           "needs_clarification": true,
-          "missing_fields": ["title"]
+          "missing_fields": ["title","location"]
         }}
       ]
     }}
 
     예시3)
-    입력: "내일 저녁 7시에 운동 추가하고, 모레 일정도 보여줘"
+    입력: "내일 저녁 7시에 운동 추가하고, 모레 강남역에서 일정도 보여줘"
     출력: {{
       "actions": [
         {{
@@ -76,11 +77,13 @@ def classify_user_input(user_input: str) -> dict:
             "title": "운동",
             "date": "2025-09-26",
             "time": "19:00"
-          }}
+          }},
+          "needs_clarification": true,
+          "missing_fields": ["location"]
         }},
         {{
           "action": "read",
-          "event": {{"date": "2025-09-27"}}
+          "event": {{"date": "2025-09-27","location":"강남역"}}
         }}
       ]
     }}
