@@ -17,12 +17,11 @@ from trl import SFTTrainer
 # -----------------------------
 # 1. 경로 & 환경설정
 # -----------------------------
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # GPU 지정 (예: 0번만 사용)
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # GPU 지정 
 
 MODEL_NAME = "Qwen/Qwen2.5-3B-Instruct"
 OUTPUT_DIR = "/home/aikusrv04/schedule_llm/JSH/results/qwen2.5-3b-lora"
-
-DATA_PATH = "./data/train.jsonl"  # JSONL 하나만 준비하면 됨
+DATA_PATH = "/home/aikusrv04/schedule_llm/JSH/data/train.jsonl"  # JSONL 하나만 준비하면 됨
 
 
 # -----------------------------
@@ -62,10 +61,10 @@ val_tokenized = val_dataset.map(tokenize, remove_columns=val_dataset.column_name
 from transformers import BitsAndBytesConfig
 
 quant_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16
+    load_in_4bit=True,               # 4bit 양자화 활성화
+    bnb_4bit_use_double_quant=True,  # 2단계 양자화(더 작은 메모리)
+    bnb_4bit_quant_type="nf4",       # 양자화 방식 (정밀도 어케 유지 할건지)
+    bnb_4bit_compute_dtype=torch.bfloat16  # 연산은 bfloat16으로 처리 (정확도 높임)
 )
 
 model = AutoModelForCausalLM.from_pretrained(
@@ -78,11 +77,11 @@ model = AutoModelForCausalLM.from_pretrained(
 # 5. LoRA 설정
 # -----------------------------
 peft_config = LoraConfig(
-    task_type=TaskType.CAUSAL_LM,
-    r=16,
-    lora_alpha=16,
-    lora_dropout=0.05,
-    target_modules=["q_proj","v_proj","k_proj","o_proj"]  # Qwen 권장
+    task_type=TaskType.CAUSAL_LM,   # 언어모델 학습용 (GPT류 모델에 필수)
+    r=16,                           # 랭크(보통 8~32): 학습 파라미터의 ‘크기’
+    lora_alpha=16,                  # 학습 속도 / 스케일 계수
+    lora_dropout=0.05,              # 과적합 방지용 dropout
+    target_modules=["q_proj","v_proj","k_proj","o_proj"]  # 어느 부분을 미세조정할지
 )
 model = get_peft_model(model, peft_config)
 
@@ -96,7 +95,7 @@ training_args = TrainingArguments(
     learning_rate=1e-4,
     num_train_epochs=3,
     logging_steps=50,
-    do_eval=True,           # ✅ 추가
+    do_eval=True,
     eval_steps=200,         # 평가 주기
     save_strategy="steps",  # (구버전도 지원)
     save_steps=200,
